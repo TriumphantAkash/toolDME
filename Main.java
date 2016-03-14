@@ -34,6 +34,21 @@ public class Main {
 		SocketConnectionServer server = new SocketConnectionServer(m.node);
 		server.start();
 		
+		try {
+			Thread.sleep(10000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		while(m.numberOfRequest>0)
+		{
+			m.csEnter();
+			m.csExecution();
+			m.csExit();
+			m.numberOfRequest--;
+			
+		}
 		
 		
 
@@ -138,6 +153,21 @@ public class Main {
 
 	public void setNode(Node node) {
 		this.node = node;
+	}
+	
+	public void csEnter()
+	{
+		
+	}
+	
+	public void csExecution()
+	{
+		
+	}
+	
+	public void csExit()
+	{
+		
 	}
 	
 	

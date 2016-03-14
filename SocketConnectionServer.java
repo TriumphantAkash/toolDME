@@ -39,12 +39,9 @@ public class SocketConnectionServer extends Thread{
 				if(m.getMessage().equalsIgnoreCase("request"))
 				{
 					
-					
 				}
 				else if(m.getMessage().equalsIgnoreCase("release"))
 				{
-					
-					
 					
 				}
 				else if(m.getMessage().equalsIgnoreCase("grant"))

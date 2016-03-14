@@ -15,6 +15,8 @@ public class Node {
 	int timestamp =0;
 	ArrayList<Node> grant;
 	ArrayList<Node> inquire;
+	
+	
 	public int getId() {
 		return id;
 	}
