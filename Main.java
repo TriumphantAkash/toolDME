@@ -117,8 +117,7 @@ public class Main {
 			node.setHostname(aln.get(nodeNumber).getHostname());
 			node.setPortNumber(aln.get(nodeNumber).getPortNumber());
 			node.setQuorum(hm.get(nodeNumber));
-			Node parent = new Node();
-			parent.setId(9999);
+
 			
 			
 			

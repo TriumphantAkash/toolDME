@@ -1,15 +1,16 @@
-package toolDME;
+
 
 public class Message {
-	String messageType;
+	String message;
 	Node sourceNode;
 	Node destinationNode;
 	int timeStamp;
-	public String getMessageType() {
-		return messageType;
+	
+	public String getMessage() {
+		return message;
 	}
-	public void setMessageType(String messageType) {
-		this.messageType = messageType;
+	public void setMessage(String messageType) {
+		this.message = messageType;
 	}
 	public Node getSourceNode() {
 		return sourceNode;
