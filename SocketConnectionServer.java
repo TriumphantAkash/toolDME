@@ -61,8 +61,23 @@ public class SocketConnectionServer extends Thread{
 				}
 				else if(m.getMessage().equalsIgnoreCase("failed"))
 				{
-					
-
+					node.setFailedReceived(true);
+					if(node.getInquireQuorum().size()>0)
+					{
+						ArrayList<Message> alm = new ArrayList<Message>();
+						for(Node n: node.getInquireQuorum())
+						{
+							Message send = new Message();
+							send.setDestinationNode(n);
+							send.setSourceNode(node);
+							send.setMessage("yield");
+							node.setTimestamp(node.getTimestamp()+1);
+							send.setTimeStamp(node.getTimestamp());
+							alm.add(send);
+						}
+						
+						
+					}
 				}
 			}
 
