@@ -15,6 +15,7 @@ public class Node {
 	int timestamp =0;
 	ArrayList<Node> grant;
 	ArrayList<Node> waitingForYield;
+	ArrayList<Node> inquireQuorum;
 	
 	
 	public int getId() {
@@ -84,12 +85,21 @@ public class Node {
 	public void setGrant(ArrayList<Node> grant) {
 		this.grant = grant;
 	}
-	public ArrayList<Node> getInquire() {
+
+	public ArrayList<Node> getWaitingForYield() {
 		return waitingForYield;
 	}
-	public void setInquire(ArrayList<Node> inquire) {
-		this.waitingForYield = inquire;
+	public void setWaitingForYield(ArrayList<Node> waitingForYield) {
+		this.waitingForYield = waitingForYield;
 	}
+	public ArrayList<Node> getInquireQuorum() {
+		return inquireQuorum;
+	}
+	public void setInquireQuorum(ArrayList<Node> inquireQuorum) {
+		this.inquireQuorum = inquireQuorum;
+	}
+	
+	
 	
 	
 }

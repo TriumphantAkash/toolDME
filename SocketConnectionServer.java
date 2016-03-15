@@ -35,6 +35,7 @@ public class SocketConnectionServer extends Thread{
 			ServerSocket serverSock = new ServerSocket(node.getPortNumber());
 			System.out.println("Server started " + node.getId());
 			Socket sock;
+			MinHeap mn = new MinHeap();
 			while(true)
 			{
 				sock = serverSock.accept();
@@ -160,13 +161,46 @@ public class SocketConnectionServer extends Thread{
 				}
 				else if(m.getMessage().equalsIgnoreCase("yield"))
 				{
-					
+					if(node.getWaitingForYield().size()>0)
+					{
+						for(Node n : node.getWaitingForYield())
+						{
+							node.getQueue().add(n);
+						}
+						mn.buildMinHeap(node.getQueue());
+						ArrayList<Message> alm = new ArrayList<Message>();
+						Message send = new Message();
+						node.setTimestamp(node.getTimestamp()+1);
+						send.setTimeStamp(node.getTimestamp());
+						send.setSourceNode(node);
+						send.setDestinationNode(node.getQueue().get(0));
+						send.setMessage("grant");
+						alm.add(send);
+						SocketConnectionClient c = new SocketConnectionClient(alm);
+						c.start();	
+						
+					}
 
 				}
 				else if(m.getMessage().equalsIgnoreCase("failed"))
 				{
-					
-
+					node.setFailedReceived(true);
+					if(node.getInquireQuorum().size()>0)
+					{
+						ArrayList<Message> alm = new ArrayList<Message>();
+						for(Node n: node.getInquireQuorum())
+						{
+							Message send = new Message();
+							node.setTimestamp(node.getTimestamp()+1);
+							send.setTimeStamp(node.getTimestamp());
+							send.setDestinationNode(n);
+							send.setSourceNode(node);
+							send.setMessage("yield");
+							alm.add(send);
+						}
+					SocketConnectionClient c = new SocketConnectionClient(alm);
+					c.start();	
+					}
 				}
 			}
 

@@ -1,5 +1,4 @@
 
-
 public class Message {
 	String message;
 	Node sourceNode;
