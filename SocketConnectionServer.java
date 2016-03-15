@@ -15,20 +15,20 @@ import org.omg.CORBA.portable.InputStream;
 
 
 public class SocketConnectionServer extends Thread{
-	
+
 	Node node ;
-	
+
 	public SocketConnectionServer(Node node)
 	{
 		this.node = node;
 	}
-	
-	
+
+
 	public void run()
 	{
 		go();
 	}
-	
+
 	public void go()
 	{
 		try{
@@ -39,123 +39,150 @@ public class SocketConnectionServer extends Thread{
 			while(true)
 			{
 				sock = serverSock.accept();
-				
-				
-				
-				
+
 				ObjectInputStream ois = new ObjectInputStream(sock.getInputStream());
 				Message m = (Message) (ois.readObject());
 				ois.close();
-				
+
 				//set logical clock
-				if(node.timestamp < m.getTimeStamp()){
-					node.timestamp = m.getTimeStamp()+1;
+				if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+					node.setTimestamp(m.getSourceNode().getTimestamp()+1);
 				}else {
-					node.timestamp += 1;
+					node.setTimestamp(node.getTimestamp()+1);
 				}
-					
+
 				if(m.getMessage().equalsIgnoreCase("request"))
 				{
-					
-					if(!node.grantFlag){	//if this is first request, grant Flag is false
-						node.queue.add(m.getSourceNode());
+
+					if(!node.isGrantFlag())
+					{	//if this is first request, grant Flag is false
+						node.getQueue().add(m.getSourceNode());
 						//send grant to the source of m
+						node.setTimestamp(node.getTimestamp()+1);
 						Message grantMsg = new Message();
-						grantMsg.sourceNode = node;
-						grantMsg.destinationNode = m.getSourceNode();
-						grantMsg.setTimeStamp(node.timestamp);
-						grantMsg.setMessage("GRANT");
-						
+						grantMsg.setSourceNode(node);
+						grantMsg.setDestinationNode(m.getSourceNode());
+						grantMsg.setMessage("grant");
+						node.setGrantFlag(true);
+						node.setGrantOwner(m.getSourceNode());
+
 						SocketConnectionClient scc = new SocketConnectionClient(grantMsg);
-						scc.start();
-						////////////////////////////////////////////////////////////////////
-						
-						node.grantFlag = true;
-						node.grantOwner = m.sourceNode;
-						
-					} else {
-						if(m.timeStamp > node.grantOwner.timestamp){	//m's timestamp is more than grant owner's timestamp
+						scc.start();						
+					}
+					else 
+					{
+						if(m.getSourceNode().getTimestamp() > node.getGrantOwner().getTimestamp())
+						{	//m's timestamp is more than grant owner's timestamp
 							//put this req m into the original priority queue
-							node.queue.add(m.sourceNode);
-						}else{
-							node.waitingForYield.add(m.sourceNode);	//add this req to waitingForYield list
-							if(!node.inquireFlag) {//check inquire Flag so that don't send inquire to a node again and again
+							node.getQueue().add(m.getSourceNode());
+							mn.buildMinHeap(node.getQueue());
+							Message sendFailed = new Message();
+							sendFailed.setSourceNode(node);
+							sendFailed.setDestinationNode(m.getSourceNode());
+							sendFailed.setMessage("failed");
+							SocketConnectionClient scc = new SocketConnectionClient(sendFailed);
+							scc.start();		
+						}else
+						{
+							node.getWaitingForYield().add(m.getSourceNode());	//add this req to waitingForYield list
+							if(!node.isInquireFlag()) 
+							{//check inquire Flag so that don't send inquire to a node again and again
 								//send inquire to grant owner
+								node.setTimestamp(node.getTimestamp()+1);
 								Message inquireMsg = new Message();
-								inquireMsg.sourceNode = node;
-								inquireMsg.destinationNode = node.grantOwner;
-								inquireMsg.setTimeStamp(node.timestamp);
-								inquireMsg.setMessage("INQUIRE");
-								
+								inquireMsg.setSourceNode(node);
+								inquireMsg.setDestinationNode(node.getGrantOwner());
+								inquireMsg.setMessage("inquire");
+								node.setInquireFlag(true);
+
 								SocketConnectionClient scc = new SocketConnectionClient(inquireMsg);
-								scc.start();
-								
-								node.inquireFlag = true;
-							
-							
-							} else {
-								//don't send inquire message again to the Grant Owner
-							}
-							
-							}
+								scc.start();		
+							} 
 						}
-						
+					}
+
 				}
 				else if(m.getMessage().equalsIgnoreCase("release"))
 				{
 					//1) delete first element from the main queue
-					node.queue.remove(0);
+					node.getQueue().remove(0);
+					mn.minHeapify(node.getQueue(), 0);
 					//2) Add waitingForYield list to original queue
-					for(Node n:node.waitingForYield){
-						node.queue.add(n);
+					for(Node n:node.getWaitingForYield())
+					{
+						node.getQueue().add(n);
 					}
-					
-					//3) sort main priority queue //boss's method
-					//Collections.sort(node.queue);
-					
-					//4) send grant to first if there
-					//SocketConnectionClient scc = new SocketConnectionClient(node);
-					
+					node.setWaitingForYield(new ArrayList<Node>());
+					mn.buildMinHeap(node.getQueue());
+					node.setGrantOwner(node.getQueue().get(0));
+					if(node.getQueue().size()>0)
+					{
+						Message sendGrant = new Message();
+						sendGrant.setMessage("grant");
+						sendGrant.setSourceNode(node);
+						sendGrant.setDestinationNode(node.getQueue().get(0));
+
+						SocketConnectionClient scc = new SocketConnectionClient(sendGrant);
+						scc.start();
+
+					}
 				}
+
 				else if(m.getMessage().equalsIgnoreCase("grant"))
 				{
 					//1) update grant arrayList
-					node.grant.add(m.getSourceNode());
-					
+					node.getGrant().add(m.getSourceNode());
+					for(Node n : node.getFailedList())
+					{
+						if(n.getId() == m.getSourceNode().getId())
+						{
+							node.getFailedList().remove(n);
+						}
+					}
+
 					//2) check size of grantArrayList 
-					if(node.grant.size() == node.quorum.size()){
-						csEnter = true;
+					if(node.getGrant().size() == node.getQuorum().size())
+					{
+						Main.csEnter = true;
+						node.setGrant(null);
+						node.setGrant(new ArrayList<Node>());
 						//go into critical section
 					}
+
 
 				}
 				else if(m.getMessage().equalsIgnoreCase("inquire"))
 				{
-					node.inquireQuorum.add(m.sourceNode);
-					if(node.failedReceived){
-						
+					
+					if(node.getFailedList().size()>0)
+					{	
+			
 						//remove these elements from my grantlist (those who have sent me inquire) 
-						for(Node i:node.inquireQuorum){
-							for(Node g: node.grant){
-								if(g.id == i.id){
-									//remove this node from grantList
-									node.grant.remove(g);
-								}
+						for(Node g: node.getGrant())
+						{
+							if(g.getId() == m.getDestinationNode().getId())
+							{
+								//remove this node from grantList
+								node.getGrant().remove(g);
 							}
 						}
-						
-						
-						//send yield to inquireQuorum list
-						node.timestamp = node.timestamp + 1;
+						node.setTimestamp(node.getTimestamp()+1);
 						ArrayList<Message>msgList = new ArrayList<Message>();
-						for(Node n:node.inquireQuorum){	//make arrayList of Messages
-							Message m = new Message();
-							m.destinationNode = n;
-							m.sourceNode = node;
-							m.message = "YIELD";							
+						for(Node n:node.getInquireQuorum())
+						{	//make arrayList of Messages
+							Message m1 = new Message();
+							m1.setDestinationNode(n);
+							m1.setSourceNode(node);
+							m1.setMessage("yield");
 						}
-						//send this to ClientTHread
+						//send yield to inquireQuorum list
+
 						SocketConnectionClient scc = new SocketConnectionClient(msgList);
+						scc.start();
+					}
+					else
+					{
+						node.getInquireQuorum().add(m.getSourceNode());
 					}
 
 				}
@@ -168,23 +195,21 @@ public class SocketConnectionServer extends Thread{
 							node.getQueue().add(n);
 						}
 						mn.buildMinHeap(node.getQueue());
-						ArrayList<Message> alm = new ArrayList<Message>();
-						Message send = new Message();
 						node.setTimestamp(node.getTimestamp()+1);
-						send.setTimeStamp(node.getTimestamp());
+						Message send = new Message();
 						send.setSourceNode(node);
 						send.setDestinationNode(node.getQueue().get(0));
 						send.setMessage("grant");
-						alm.add(send);
-						SocketConnectionClient c = new SocketConnectionClient(alm);
+
+						SocketConnectionClient c = new SocketConnectionClient(send);
 						c.start();	
-						
+
 					}
 
 				}
 				else if(m.getMessage().equalsIgnoreCase("failed"))
 				{
-					node.setFailedReceived(true);
+					node.getFailedList().add(m.getSourceNode());
 					if(node.getInquireQuorum().size()>0)
 					{
 						ArrayList<Message> alm = new ArrayList<Message>();
@@ -192,14 +217,21 @@ public class SocketConnectionServer extends Thread{
 						{
 							Message send = new Message();
 							node.setTimestamp(node.getTimestamp()+1);
-							send.setTimeStamp(node.getTimestamp());
 							send.setDestinationNode(n);
 							send.setSourceNode(node);
 							send.setMessage("yield");
+							for(Node g: node.getGrant())
+							{
+								if(g.getId() == n.getId())
+								{
+									node.getGrant().remove(g);
+								}
+							}
 							alm.add(send);
 						}
-					SocketConnectionClient c = new SocketConnectionClient(alm);
-					c.start();	
+						node.setInquireQuorum(new ArrayList<Node>());
+						SocketConnectionClient c = new SocketConnectionClient(alm);
+						c.start();	
 					}
 				}
 			}
@@ -208,13 +240,13 @@ public class SocketConnectionServer extends Thread{
 		catch(IOException ex)
 		{
 			ex.printStackTrace();
-			
+
 		}
 		catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
-	
+
 }

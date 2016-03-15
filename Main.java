@@ -15,7 +15,7 @@ public class Main {
 	int interRequestDelay;
 	int csExecutionTime;
 	int numberOfRequest;
-	static boolean csEnter = false;
+	public static boolean csEnter = false;
 	
 	public Main()
 	{

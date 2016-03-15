@@ -1,9 +1,8 @@
 
 public class Message {
-	String message;
-	Node sourceNode;
-	Node destinationNode;
-	int timeStamp;
+	private String message;
+	private Node sourceNode;
+	private Node destinationNode;
 	
 	public String getMessage() {
 		return message;
@@ -23,12 +22,4 @@ public class Message {
 	public void setDestinationNode(Node destinationNode) {
 		this.destinationNode = destinationNode;
 	}
-	public int getTimeStamp() {
-		return timeStamp;
-	}
-	public void setTimeStamp(int timeStamp) {
-		this.timeStamp = timeStamp;
-	}
-	
-	
 }

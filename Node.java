@@ -3,19 +3,19 @@ import java.util.ArrayList;
 
 public class Node {
 
-	int id;
-	int portNumber;
-	String hostname;
-	ArrayList<Node> quorum;
-	ArrayList<Node> queue;
-	Node grantOwner;
-	boolean failedReceived;
-	boolean grantFlag;
-	boolean inquireFlag;
-	int timestamp =0;
-	ArrayList<Node> grant;
-	ArrayList<Node> waitingForYield;
-	ArrayList<Node> inquireQuorum;
+	private int id;
+	private int portNumber;
+	private String hostname;
+	private ArrayList<Node> quorum;
+	private ArrayList<Node> queue;
+	private Node grantOwner;
+	private boolean grantFlag;
+	private boolean inquireFlag;
+	private int timestamp =0;
+	private ArrayList<Node> grant;
+	private ArrayList<Node> waitingForYield;
+	private ArrayList<Node> inquireQuorum;
+	private ArrayList<Node> failedList;
 	
 	
 	public int getId() {
@@ -55,12 +55,6 @@ public class Node {
 	public void setGrantOwner(Node grantOwner) {
 		this.grantOwner = grantOwner;
 	}
-	public boolean isFailedReceived() {
-		return failedReceived;
-	}
-	public void setFailedReceived(boolean failedReceived) {
-		this.failedReceived = failedReceived;
-	}
 	public boolean isGrantFlag() {
 		return grantFlag;
 	}
@@ -97,6 +91,12 @@ public class Node {
 	}
 	public void setInquireQuorum(ArrayList<Node> inquireQuorum) {
 		this.inquireQuorum = inquireQuorum;
+	}
+	public ArrayList<Node> getFailedList() {
+		return failedList;
+	}
+	public void setFailedList(ArrayList<Node> failedList) {
+		this.failedList = failedList;
 	}
 	
 	
