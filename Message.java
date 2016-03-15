@@ -1,5 +1,7 @@
+import java.io.Serializable;
 
-public class Message {
+
+public class Message implements Serializable{
 	private String message;
 	private Node sourceNode;
 	private Node destinationNode;

@@ -71,7 +71,8 @@ public class SocketConnectionServer extends Thread{
 					}
 					else 
 					{
-						if(m.getSourceNode().getTimestamp() > node.getGrantOwner().getTimestamp())
+						//if(m.getSourceNode().getTimestamp() > node.getGrantOwner().getTimestamp())
+						if(m.getSourceNode().getTimestamp() > node.getQueue().get(0).getTimestamp())
 						{	//m's timestamp is more than grant owner's timestamp
 							//put this req m into the original priority queue
 							node.getQueue().add(m.getSourceNode());

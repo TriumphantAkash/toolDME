@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
 
-public class Node {
+public class Node implements Serializable{
 
 	private int id;
 	private int portNumber;
@@ -11,12 +12,22 @@ public class Node {
 	private Node grantOwner;
 	private boolean grantFlag;
 	private boolean inquireFlag;
-	private int timestamp =0;
+	private int timestamp =1;
 	private ArrayList<Node> grant;
 	private ArrayList<Node> waitingForYield;
 	private ArrayList<Node> inquireQuorum;
 	private ArrayList<Node> failedList;
 	
+	public Node()
+	{
+		grant = new ArrayList<Node>();
+		waitingForYield = new ArrayList<Node>();
+		inquireQuorum = new ArrayList<Node>();
+		failedList = new ArrayList<Node>();
+		queue = new ArrayList<Node>();
+		quorum = new ArrayList<Node>();
+		
+	}
 	
 	public int getId() {
 		return id;
