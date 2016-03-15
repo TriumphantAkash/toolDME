@@ -14,7 +14,7 @@ public class Node {
 	boolean inquireFlag;
 	int timestamp =0;
 	ArrayList<Node> grant;
-	ArrayList<Node> inquire;
+	ArrayList<Node> waitingForYield;
 	
 	
 	public int getId() {
@@ -85,10 +85,10 @@ public class Node {
 		this.grant = grant;
 	}
 	public ArrayList<Node> getInquire() {
-		return inquire;
+		return waitingForYield;
 	}
 	public void setInquire(ArrayList<Node> inquire) {
-		this.inquire = inquire;
+		this.waitingForYield = inquire;
 	}
 	
 	
