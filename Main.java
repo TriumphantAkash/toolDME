@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 
 public class Main {
@@ -14,6 +15,7 @@ public class Main {
 	int interRequestDelay;
 	int csExecutionTime;
 	int numberOfRequest;
+	static boolean csEnter = false;
 	
 	public Main()
 	{
@@ -46,12 +48,16 @@ public class Main {
 			m.csEnter();
 			m.csExecution();
 			m.csExit();
-			m.numberOfRequest--;
-			
+			m.numberOfRequest = m.numberOfRequest - 1;
+			double lambda = 1.0 / m.interRequestDelay; 
+	        Random defaultR = new Random();
+	        try {        	
+	        	long l = (long) m.getRandom(defaultR, lambda);
+				Thread.sleep(l);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}	
 		}
-		
-		
-
 	}
 	
 	public void readConfigFile(int nodeNumber, File f)
@@ -89,15 +95,10 @@ public class Main {
 				n.setId(Integer.parseInt(hostNameLine[0]));
 				n.setHostname(hostNameLine[1]);
 				n.setPortNumber(Integer.parseInt(hostNameLine[2]));
-				
-				
-				
 				aln.add(n);
 			}
 			
-			
 			HashMap<Integer,ArrayList<Node>> hm = new HashMap<Integer,ArrayList<Node>>();
-	
 			for(int i=0;i<totalNodes;i++)
 			{
 				ArrayList<Node> quorum = new ArrayList<Node>();
@@ -118,25 +119,17 @@ public class Main {
 					{				
 						Node n = new Node();
 						n.setId(Integer.parseInt(childLine[j]));
-						
 						n.setHostname(aln.get(n.getId()).getHostname());
 						n.setPortNumber(aln.get(n.getId()).getPortNumber());
-						
 						quorum.add(n);
 					}
 				}
-				
 				hm.put(i, quorum);
 			}
-			
 			node.setHostname(aln.get(nodeNumber).getHostname());
 			node.setPortNumber(aln.get(nodeNumber).getPortNumber());
 			node.setQuorum(hm.get(nodeNumber));
 
-			
-			
-			
-			
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -144,9 +137,8 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
-
+	
 	public Node getNode() {
 		return node;
 	}
@@ -157,11 +149,21 @@ public class Main {
 	
 	public void csEnter()
 	{
-		
+		while(!csEnter)
+		{
+		}
 	}
 	
 	public void csExecution()
 	{
+        double lambda = 1.0 / csExecutionTime; 
+        Random defaultR = new Random();
+        try {        	
+        	long l = (long) getRandom(defaultR, lambda);
+			Thread.sleep(l);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		
 	}
 	
@@ -169,6 +171,12 @@ public class Main {
 	{
 		
 	}
+	
+	public double getRandom(Random r, double p) { 
+        double d = -(Math.log(r.nextDouble()) / p);
+		 System.out.println(d);
+        return d;
+    }
 	
 	
 

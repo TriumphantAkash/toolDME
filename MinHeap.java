@@ -17,9 +17,6 @@ public class MinHeap {
 		{
 			minHeapify(al, i);
 		}
-
-		System.out.println("Array after building minHeap");
-		print(al);
 	}
 
 	public void minHeapify(ArrayList<Node> al, int index)
@@ -66,20 +63,6 @@ public class MinHeap {
 		al.remove(al.size()-1);
 		minHeapify(al, 0);
 	}
-
-	public void print(ArrayList<Node> al)
-	{
-		for(int i=0;i<al.size();i++)
-		{
-			System.out.print(al.get(i));
-			if(i<al.size()-1)
-			{
-				System.out.print(",");
-			}
-		}
-		System.out.println();
-	}
-
 
 
 }
