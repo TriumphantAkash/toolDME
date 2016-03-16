@@ -23,7 +23,7 @@ public class MinHeap {
 	{
 		int left = (2*index)+1;
 		int right = (2*index)+2;
-
+		heapSize = al.size();
 		int smallest = index;
 
 		if(left<heapSize && al.get(left).getTimestamp()<=al.get(index).getTimestamp())

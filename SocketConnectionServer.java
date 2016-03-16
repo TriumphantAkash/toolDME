@@ -1,18 +1,8 @@
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Queue;
-
-import org.omg.CORBA.portable.InputStream;
-
 
 public class SocketConnectionServer extends Thread{
 
@@ -22,7 +12,6 @@ public class SocketConnectionServer extends Thread{
 	{
 		this.node = node;
 	}
-
 
 	public void run()
 	{
@@ -53,7 +42,7 @@ public class SocketConnectionServer extends Thread{
 
 				if(m.getMessage().equalsIgnoreCase("request"))
 				{
-
+					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
 					if(!node.isGrantFlag())
 					{	//if this is first request, grant Flag is false
 						node.getQueue().add(m.getSourceNode());
@@ -72,52 +61,61 @@ public class SocketConnectionServer extends Thread{
 					else 
 					{
 						//if(m.getSourceNode().getTimestamp() > node.getGrantOwner().getTimestamp())
-						if(m.getSourceNode().getTimestamp() > node.getQueue().get(0).getTimestamp())
-						{	//m's timestamp is more than grant owner's timestamp
-							//put this req m into the original priority queue
-							node.getQueue().add(m.getSourceNode());
-							mn.buildMinHeap(node.getQueue());
-							Message sendFailed = new Message();
-							sendFailed.setSourceNode(node);
-							sendFailed.setDestinationNode(m.getSourceNode());
-							sendFailed.setMessage("failed");
-							SocketConnectionClient scc = new SocketConnectionClient(sendFailed);
-							scc.start();		
-						}else
+						if(node.getQueue().size()>0)
 						{
-							node.getWaitingForYield().add(m.getSourceNode());	//add this req to waitingForYield list
-							if(!node.isInquireFlag()) 
-							{//check inquire Flag so that don't send inquire to a node again and again
-								//send inquire to grant owner
-								node.setTimestamp(node.getTimestamp()+1);
-								Message inquireMsg = new Message();
-								inquireMsg.setSourceNode(node);
-								inquireMsg.setDestinationNode(node.getGrantOwner());
-								inquireMsg.setMessage("inquire");
-								node.setInquireFlag(true);
-
-								SocketConnectionClient scc = new SocketConnectionClient(inquireMsg);
+							if((m.getSourceNode().getTimestamp() > node.getQueue().get(0).getTimestamp()) || ((m.getSourceNode().getTimestamp()==node.getQueue().get(0).getTimestamp()) && m.getSourceNode().getId()>node.getQueue().get(0).getId()))
+							{	//m's timestamp is more than grant owner's timestamp
+								//put this req m into the original priority queue
+								node.getQueue().add(m.getSourceNode());
+								mn.buildMinHeap(node.getQueue());
+								Message sendFailed = new Message();
+								sendFailed.setSourceNode(node);
+								sendFailed.setDestinationNode(m.getSourceNode());
+								sendFailed.setMessage("failed");
+								SocketConnectionClient scc = new SocketConnectionClient(sendFailed);
 								scc.start();		
-							} 
+							}else
+							{
+								node.getWaitingForYield().add(m.getSourceNode());	//add this req to waitingForYield list
+								if(!node.isInquireFlag()) 
+								{//check inquire Flag so that don't send inquire to a node again and again
+									//send inquire to grant owner
+									node.setTimestamp(node.getTimestamp()+1);
+									Message inquireMsg = new Message();
+									inquireMsg.setSourceNode(node);
+									inquireMsg.setDestinationNode(node.getGrantOwner());
+									inquireMsg.setMessage("inquire");
+									node.setInquireFlag(true);
+
+									SocketConnectionClient scc = new SocketConnectionClient(inquireMsg);
+									scc.start();		
+								} 
+							}
 						}
+						
 					}
 
 				}
 				else if(m.getMessage().equalsIgnoreCase("release"))
 				{
+					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
 					//1) delete first element from the main queue
 					node.getQueue().remove(0);
-					mn.minHeapify(node.getQueue(), 0);
+					//mn.minHeapify(node.getQueue(), 0);
+					node.setGrantFlag(false);
+					node.setGrant(new ArrayList<Node>());
+					
 					//2) Add waitingForYield list to original queue
 					for(Node n:node.getWaitingForYield())
 					{
 						node.getQueue().add(n);
 					}
+					
 					node.setWaitingForYield(new ArrayList<Node>());
-					mn.buildMinHeap(node.getQueue());
-					node.setGrantOwner(node.getQueue().get(0));
 					if(node.getQueue().size()>0)
 					{
+						mn.buildMinHeap(node.getQueue());
+						node.setGrantOwner(node.getQueue().get(0));
 						Message sendGrant = new Message();
 						sendGrant.setMessage("grant");
 						sendGrant.setSourceNode(node);
@@ -132,19 +130,25 @@ public class SocketConnectionServer extends Thread{
 				else if(m.getMessage().equalsIgnoreCase("grant"))
 				{
 					//1) update grant arrayList
+					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
 					node.getGrant().add(m.getSourceNode());
 					for(Node n : node.getFailedList())
 					{
 						if(n.getId() == m.getSourceNode().getId())
 						{
 							node.getFailedList().remove(n);
+							break;
 						}
 					}
+					System.out.println("Node "+node.getId() + " Grant List Size "+node.getGrant().size());
 
 					//2) check size of grantArrayList 
 					if(node.getGrant().size() == node.getQuorum().size())
 					{
-						Main.csEnter = true;
+						synchronized(this)
+						{
+							Main.csEnter = true;
+						}
 						node.setGrant(null);
 						node.setGrant(new ArrayList<Node>());
 						//go into critical section
@@ -154,7 +158,7 @@ public class SocketConnectionServer extends Thread{
 				}
 				else if(m.getMessage().equalsIgnoreCase("inquire"))
 				{
-					
+					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
 					if(node.getFailedList().size()>0)
 					{	
 			
@@ -189,6 +193,7 @@ public class SocketConnectionServer extends Thread{
 				}
 				else if(m.getMessage().equalsIgnoreCase("yield"))
 				{
+					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
 					if(node.getWaitingForYield().size()>0)
 					{
 						for(Node n : node.getWaitingForYield())
@@ -210,6 +215,7 @@ public class SocketConnectionServer extends Thread{
 				}
 				else if(m.getMessage().equalsIgnoreCase("failed"))
 				{
+					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
 					node.getFailedList().add(m.getSourceNode());
 					if(node.getInquireQuorum().size()>0)
 					{
@@ -226,6 +232,7 @@ public class SocketConnectionServer extends Thread{
 								if(g.getId() == n.getId())
 								{
 									node.getGrant().remove(g);
+									break;
 								}
 							}
 							alm.add(send);

@@ -15,7 +15,7 @@ public class Main {
 	int interRequestDelay;
 	int csExecutionTime;
 	int numberOfRequest;
-	static boolean csEnter = false;
+	public static volatile boolean csEnter = false;
 
 	public Main()
 	{
@@ -40,12 +40,15 @@ public class Main {
 			e.printStackTrace();
 		}
 		
-		while(m.numberOfRequest>0)
+		//while(m.numberOfRequest>0)
+		int counter = 2;
+		while(counter>0)
 		{
 			m.csEnter();
 			m.csExecution();
 			m.csExit();
-			m.numberOfRequest = m.numberOfRequest - 1;
+			//m.numberOfRequest = m.numberOfRequest - 1;
+			counter--;
 			double lambda = 1.0 / m.interRequestDelay; 
 	        Random defaultR = new Random();
 	        try {        	
@@ -143,9 +146,11 @@ public class Main {
 		}
 		SocketConnectionClient scc = new SocketConnectionClient(alm);
 		scc.start();
-		while(!csEnter)
+		while(!Main.csEnter)
 		{
 		}
+		System.out.println("Exit CS Enter function");
+		
 	}
 	
 	public void csExecution()
@@ -158,17 +163,28 @@ public class Main {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+        System.out.println("CSExecution "+ node.getId());
+        Main.csEnter = false;
 		
 	}
 	
 	public void csExit()
 	{
-		
+		ArrayList<Message> alm = new ArrayList<Message>();
+		for(Node n : node.getQuorum())
+		{
+			Message m = new Message();
+			m.setSourceNode(node);
+			m.setDestinationNode(n);
+			m.setMessage("release");
+			alm.add(m);
+		}
+		SocketConnectionClient scc = new SocketConnectionClient(alm);
+		scc.start();
 	}
 	
 	public double getRandom(Random r, double p) { 
         double d = -(Math.log(r.nextDouble()) / p);
-		 System.out.println(d);
         return d;
     }
 	

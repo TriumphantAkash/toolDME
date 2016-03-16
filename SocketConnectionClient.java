@@ -34,12 +34,15 @@ public class SocketConnectionClient extends Thread{
 			}
 			else
 			{
-				System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
-				Socket client = new Socket(m.getDestinationNode().getHostname(), m.getDestinationNode().getPortNumber());
-				ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
-				oos.writeObject(m);
-				oos.close();
-				client.close();
+				synchronized(this)
+				{					
+					
+					Socket client = new Socket(m.getDestinationNode().getHostname(), m.getDestinationNode().getPortNumber());
+					ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
+					oos.writeObject(m);
+					oos.close();
+					client.close();
+				}
 			}
 
 		}
