@@ -17,6 +17,7 @@ public class Node implements Serializable{
 	private ArrayList<Node> waitingForYield;
 	private ArrayList<Node> inquireQuorum;
 	private ArrayList<Node> failedList;
+	private int requestTimestamp =1;
 	
 	public Node()
 	{
@@ -108,6 +109,14 @@ public class Node implements Serializable{
 	}
 	public void setFailedList(ArrayList<Node> failedList) {
 		this.failedList = failedList;
+	}
+
+	public int getRequestTimestamp() {
+		return requestTimestamp;
+	}
+
+	public void setRequestTimestamp(int requestTimestamp) {
+		this.requestTimestamp = requestTimestamp;
 	}
 	
 	

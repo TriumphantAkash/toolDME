@@ -34,7 +34,7 @@ public class SocketConnectionClient extends Thread{
 			}
 			else
 			{
-				synchronized(this)
+				synchronized(m)
 				{					
 					
 					Socket client = new Socket(m.getDestinationNode().getHostname(), m.getDestinationNode().getPortNumber());
@@ -48,6 +48,12 @@ public class SocketConnectionClient extends Thread{
 		}
 		catch(Exception e)
 		{
+			if(am.size()>0)
+			{
+				System.out.println("-- am size - " + am.size());
+			}else{
+				System.out.println(m.getMessage()+" - " + m.getSourceNode().getId() + " - " + m.getDestinationNode().getId());
+			}
 			e.printStackTrace();
 		}
 	}
