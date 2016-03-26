@@ -32,27 +32,36 @@ public class Main {
 
 		SocketConnectionServer server = new SocketConnectionServer(m.node);
 		server.start();
-		
+
 		try {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		//while(m.numberOfRequest>0)
 		int counter = 2;
 		while(counter>0)
-		{
+		{			
+
+			try {        	
+
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 			m.csEnter();
 			m.csExecution();
 			m.csExit();
+
 			//m.numberOfRequest = m.numberOfRequest - 1;
 			counter--;
 			double lambda = 1.0 / m.interRequestDelay; 
-	        Random defaultR = new Random();
-	        try {        	
-	        	long l = (long) m.getRandom(defaultR, lambda);
+			Random defaultR = new Random();
+			try {        	
+				long l = (long) m.getRandom(defaultR, lambda);
 				Thread.sleep(l);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -75,7 +84,7 @@ public class Main {
 			interRequestDelay = Integer.parseInt(words[1]);
 			csExecutionTime = Integer.parseInt(words[2]);
 			numberOfRequest = Integer.parseInt(words[3]);
-			
+
 			for(int i=0;i<totalNode;i++)
 			{
 				String line2= br.readLine();
@@ -84,12 +93,12 @@ public class Main {
 				Node n = new Node();
 				n.setId(Integer.parseInt(hostNameLine[0]));
 				n.setHostname(hostNameLine[1]);
-				
+
 				n.setPortNumber(Integer.parseInt(hostNameLine[2]));
 				hostNameHM.put(n.getId(), n);
 				//aln.add(n);
 			}
-			
+
 			HashMap<Integer,ArrayList<Node>> hm = new HashMap<Integer,ArrayList<Node>>();
 
 			for(int i=0;i<totalNode;i++)
@@ -100,12 +109,12 @@ public class Main {
 				String[] childLine = line2.split("\\s+");
 				for(int j=0;j<childLine.length;j++)
 				{
-						Node n = new Node();
-						n.setId(Integer.parseInt(childLine[j]));
-						n.setHostname(hostNameHM.get(n.getId()).getHostname());
-						n.setPortNumber(hostNameHM.get(n.getId()).getPortNumber());
-						quorum.add(n);
-				
+					Node n = new Node();
+					n.setId(Integer.parseInt(childLine[j]));
+					n.setHostname(hostNameHM.get(n.getId()).getHostname());
+					n.setPortNumber(hostNameHM.get(n.getId()).getPortNumber());
+					quorum.add(n);
+
 				}
 
 				hm.put(i, quorum);
@@ -132,7 +141,7 @@ public class Main {
 	public void setNode(Node node) {
 		this.node = node;
 	}
-	
+
 	public void csEnter()
 	{
 		ArrayList<Message> alm = new ArrayList<Message>();
@@ -150,24 +159,24 @@ public class Main {
 		{
 		}
 		System.out.println("Exit CS Enter function");
-		
+
 	}
-	
+
 	public void csExecution()
 	{
-        double lambda = 1.0 / csExecutionTime; 
-        Random defaultR = new Random();
-        try {        	
-        	long l = (long) getRandom(defaultR, lambda);
+		double lambda = 1.0 / csExecutionTime; 
+		Random defaultR = new Random();
+		try {        	
+			long l = (long) getRandom(defaultR, lambda);
 			Thread.sleep(l);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-        System.out.println("CSExecution "+ node.getId());
-        Main.csEnter = false;
-		
+		System.out.println("CSExecution "+ node.getId());
+		Main.csEnter = false;
+
 	}
-	
+
 	public void csExit()
 	{
 		ArrayList<Message> alm = new ArrayList<Message>();
@@ -182,11 +191,11 @@ public class Main {
 		SocketConnectionClient scc = new SocketConnectionClient(alm);
 		scc.start();
 	}
-	
+
 	public double getRandom(Random r, double p) { 
-        double d = -(Math.log(r.nextDouble()) / p);
-        return d;
-    }
-	
+		double d = -(Math.log(r.nextDouble()) / p);
+		return d;
+	}
+
 
 }

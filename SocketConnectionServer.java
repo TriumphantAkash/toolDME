@@ -3,6 +3,7 @@ import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class SocketConnectionServer extends Thread{
 
@@ -75,7 +76,23 @@ public class SocketConnectionServer extends Thread{
 								//put this req m into the original priority queue
 						
 								node.getQueue().add(m.getSourceNode());
+								
+								System.out.println("Before build heap");
+								System.out.print("Node "+node.getId() + " PQ ");
+								for(Node n : node.getQueue())
+								{
+									System.out.print("("+n.getRequestTimestamp()+","+n.getId()+"),");
+								}
+								System.out.println();
 								mn.buildMinHeap(node.getQueue());
+								
+								System.out.println("After build heap");
+								System.out.print("Node "+node.getId() + " PQ ");
+								for(Node n : node.getQueue())
+								{
+									System.out.print("("+n.getRequestTimestamp()+","+n.getId()+"),");
+								}
+								System.out.println();
 								ArrayList<Message> alm = new ArrayList<Message>();
 								Message sendFailed = new Message();
 								sendFailed.setSourceNode(node);
@@ -124,11 +141,24 @@ public class SocketConnectionServer extends Thread{
 					node.setWaitingForYield(new ArrayList<Node>());
 					if(node.getQueue().size()>0)
 					{
-						mn.buildMinHeap(node.getQueue());
+						System.out.println("Before build heap");
+						System.out.print("Node "+node.getId() + " PQ ");
 						for(Node n : node.getQueue())
-						{	
-							//System.out.println("Node "+ node.getId() + " Queue "+ n.getId() + " Timestamp "+ n.getTimestamp());
+						{
+							System.out.print("("+n.getRequestTimestamp()+","+n.getId()+"),");
 						}
+						System.out.println();
+						
+						mn.buildMinHeap(node.getQueue());
+						
+						System.out.println("After build heap");
+						System.out.print("Node "+node.getId() + " PQ ");
+						for(Node n : node.getQueue())
+						{
+							System.out.print("("+n.getRequestTimestamp()+","+n.getId()+",");
+						}
+						System.out.println();
+						
 						node.setGrantOwner(node.getQueue().get(0));
 						ArrayList<Message> alm = new ArrayList<Message>();
 						Message sendGrant = new Message();
@@ -154,14 +184,18 @@ public class SocketConnectionServer extends Thread{
 						System.out.print("(" + n.getId() + "),");
 					}
 					System.out.println();
-					for(int i=0;i<node.getFailedList().size();i++)
-					{
-						if(node.getFailedList().get(i).getId() == m.getSourceNode().getId())
-						{
-							node.getFailedList().remove(i);
-							break;
-						}
-					}
+					
+				
+					node.setFailedList(removeElementFromList(node.getFailedList(), m.getSourceNode().getId()));
+					
+					//for(int i=0;i<node.getFailedList().size();i++)
+//					{
+//						if(node.getFailedList().get(i).getId() == m.getSourceNode().getId())
+//						{
+//							node.getFailedList().remove(i);
+//							break;
+//						}
+//					}
 
 					//System.out.println("Node "+node.getId() + " Grant List Size "+node.getGrant().size());
 
@@ -186,14 +220,17 @@ public class SocketConnectionServer extends Thread{
 					if(node.getFailedList().size()>0)
 					{	
 						System.out.println("Nilesh");
-						for(int i=0;i<node.getGrant().size();i++)
-						{
-							if(node.getGrant().get(i).getId() == m.getSourceNode().getId())
-							{
-								node.getGrant().remove(i);
-								break;
-							}
-						}
+						Iterator<Node> it = node.getGrant().iterator();
+						
+						node.setGrant(removeElementFromList(node.getGrant(), m.getSourceNode().getId()));
+//						for(int i=0;i<node.getGrant().size();i++)
+//						{
+//							if(node.getGrant().get(i).getId() == m.getSourceNode().getId())
+//							{
+//								node.getGrant().remove(i);
+//								break;
+//							}
+//						}
 						node.getInquireQuorum().add(m.getSourceNode());
 						System.out.print("Inquire List ");
 						for(Node n: node.getInquireQuorum())
@@ -271,16 +308,18 @@ public class SocketConnectionServer extends Thread{
 							send.setDestinationNode(n);
 							send.setSourceNode(node);
 							send.setMessage("yield");
-							for(int i=0;i<node.getGrant().size();i++)
-							{
-								if(node.getGrant().get(i).getId() == n.getId())
-								{
-									node.getGrant().remove(i);
-									i--;
-								}
-							}
 							
-//							
+							
+							node.setGrant(removeElementFromList(node.getGrant(), n.getId()));
+//							for(int i=0;i<node.getGrant().size();i++)
+//							{
+//								if(node.getGrant().get(i).getId() == n.getId())
+//								{
+//									node.getGrant().remove(i);
+//									i--;
+//								}
+//							}
+													
 							alm.add(send);
 							System.out.print("Node " + node.getId() + " Grant list after deletion ");
 							for(Node a: node.getGrant())
@@ -316,6 +355,22 @@ public class SocketConnectionServer extends Thread{
 			e.printStackTrace();
 		}
 
+	}
+	
+	public ArrayList<Node> removeElementFromList(ArrayList<Node> al, Integer id)
+	{
+		ArrayList<Node> alm = new ArrayList<Node>();
+		for(Node n : al)
+		{
+			if(n.getId()==id)
+			{
+				continue;
+			}
+			else
+				alm.add(n);
+		}
+		
+		return alm;
 	}
 
 }
