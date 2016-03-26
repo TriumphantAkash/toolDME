@@ -15,6 +15,8 @@ public class Main {
 	int interRequestDelay;
 	int csExecutionTime;
 	int numberOfRequest;
+	public static String resourceHostName;
+	public static int resourcePortNumber;
 	public static volatile boolean csEnter = false;
 
 	public Main()
@@ -58,6 +60,9 @@ public class Main {
 				e.printStackTrace();
 			}	
 		}
+		resourceHostName=args[2];
+		resourcePortNumber=Integer.parseInt(args[3]);
+		
 	}
 
 	public void readConfigFile(int nodeNumber, File f)
@@ -155,6 +160,22 @@ public class Main {
 	
 	public void csExecution()
 	{
+		//sending execution request to the resource csgrads1
+		ArrayList<Message> almResource = new ArrayList<Message>();
+		Message mResource = new Message();
+		mResource.setSourceNode(node);
+		//we will get the destination hostname fro command line argument
+		Node nResource = new Node();
+		nResource.setHostname(resourceHostName);
+		nResource.setPortNumber(resourcePortNumber);
+		
+		mResource.setDestinationNode(nResource);
+		mResource.setMessage("csenter");
+		almResource.add(mResource);
+		
+		SocketConnectionClient sccResource = new SocketConnectionClient(almResource);
+		sccResource.start();
+		
         double lambda = 1.0 / csExecutionTime; 
         Random defaultR = new Random();
         try {        	
@@ -170,6 +191,22 @@ public class Main {
 	
 	public void csExit()
 	{
+		//sending execution request to the resource csgrads1
+				ArrayList<Message> almResource = new ArrayList<Message>();
+				Message mResource = new Message();
+				mResource.setSourceNode(node);
+				//we will get the destination hostname fro command line argument
+				Node nResource = new Node();
+				nResource.setHostname(resourceHostName);
+				nResource.setPortNumber(resourcePortNumber);
+				
+				mResource.setDestinationNode(nResource);
+				mResource.setMessage("csexit");
+				almResource.add(mResource);
+				
+				SocketConnectionClient sccResource = new SocketConnectionClient(almResource);
+				sccResource.start();
+				
 		ArrayList<Message> alm = new ArrayList<Message>();
 		for(Node n : node.getQuorum())
 		{
@@ -181,6 +218,8 @@ public class Main {
 		}
 		SocketConnectionClient scc = new SocketConnectionClient(alm);
 		scc.start();
+		
+		
 	}
 	
 	public double getRandom(Random r, double p) { 
