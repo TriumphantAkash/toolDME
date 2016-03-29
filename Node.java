@@ -1,21 +1,34 @@
+import java.io.Serializable;
 import java.util.ArrayList;
 
 
-public class Node {
+public class Node implements Serializable{
 
-	int id;
-	int portNumber;
-	String hostname;
-	ArrayList<Node> quorum;
-	ArrayList<Node> queue;
-	Node grantOwner;
-	boolean failedReceived;
-	boolean grantFlag;
-	boolean inquireFlag;
-	int timestamp =0;
-	ArrayList<Node> grant;
-	ArrayList<Node> inquire;
+	private int id;
+	private int portNumber;
+	private String hostname;
+	private ArrayList<Node> quorum;
+	private ArrayList<Node> queue;
+	private Node grantOwner;
+	private boolean grantFlag;
+	private boolean inquireFlag;
+	private int timestamp =1;
+	private ArrayList<Node> grant;
+	private ArrayList<Node> waitingForYield;
+	private ArrayList<Node> inquireQuorum;
+	private ArrayList<Node> failedList;
+	private int requestTimestamp =1;
 	
+	public Node()
+	{
+		grant = new ArrayList<Node>();
+		waitingForYield = new ArrayList<Node>();
+		inquireQuorum = new ArrayList<Node>();
+		failedList = new ArrayList<Node>();
+		queue = new ArrayList<Node>();
+		quorum = new ArrayList<Node>();
+		
+	}
 	
 	public int getId() {
 		return id;
@@ -54,12 +67,6 @@ public class Node {
 	public void setGrantOwner(Node grantOwner) {
 		this.grantOwner = grantOwner;
 	}
-	public boolean isFailedReceived() {
-		return failedReceived;
-	}
-	public void setFailedReceived(boolean failedReceived) {
-		this.failedReceived = failedReceived;
-	}
 	public boolean isGrantFlag() {
 		return grantFlag;
 	}
@@ -84,12 +91,35 @@ public class Node {
 	public void setGrant(ArrayList<Node> grant) {
 		this.grant = grant;
 	}
-	public ArrayList<Node> getInquire() {
-		return inquire;
+
+	public ArrayList<Node> getWaitingForYield() {
+		return waitingForYield;
 	}
-	public void setInquire(ArrayList<Node> inquire) {
-		this.inquire = inquire;
+	public void setWaitingForYield(ArrayList<Node> waitingForYield) {
+		this.waitingForYield = waitingForYield;
 	}
+	public ArrayList<Node> getInquireQuorum() {
+		return inquireQuorum;
+	}
+	public void setInquireQuorum(ArrayList<Node> inquireQuorum) {
+		this.inquireQuorum = inquireQuorum;
+	}
+	public ArrayList<Node> getFailedList() {
+		return failedList;
+	}
+	public void setFailedList(ArrayList<Node> failedList) {
+		this.failedList = failedList;
+	}
+
+	public int getRequestTimestamp() {
+		return requestTimestamp;
+	}
+
+	public void setRequestTimestamp(int requestTimestamp) {
+		this.requestTimestamp = requestTimestamp;
+	}
+	
+	
 	
 	
 }

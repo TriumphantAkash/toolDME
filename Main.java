@@ -5,55 +5,75 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 
 public class Main {
-	
+
 	Node node;
-	int totalNodes;
+	int totalNode;
 	int interRequestDelay;
 	int csExecutionTime;
 	int numberOfRequest;
-	
+	public static String resourceHostName;
+	public static int resourcePortNumber;
+	public static volatile boolean csEnter = false;
+
 	public Main()
 	{
 		node = new Node();
 	}
 
 	public static void main(String[] args) {
-	
-		
-		
 		int nodeNumber = Integer.parseInt(args[0]);
 		File f = new File(args[1]);
-		
+
 		Main m = new Main();
 		m.node.setId(nodeNumber);
 		m.readConfigFile(nodeNumber,f);
-		
+
 		SocketConnectionServer server = new SocketConnectionServer(m.node);
 		server.start();
-		
+
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(3000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		while(m.numberOfRequest>0)
-		{
+
+		//while(m.numberOfRequest>0)
+		int counter = 2;
+		while(counter>0)
+		{			
+
+			try {        	
+
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
 			m.csEnter();
 			m.csExecution();
 			m.csExit();
-			m.numberOfRequest--;
-			
-		}
-		
-		
 
+			//m.numberOfRequest = m.numberOfRequest - 1;
+			counter--;
+			double lambda = 1.0 / m.interRequestDelay; 
+			Random defaultR = new Random();
+			try {        	
+				long l = (long) m.getRandom(defaultR, lambda);
+				Thread.sleep(l);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}	
+		}
+		resourceHostName=args[2];
+		resourcePortNumber=Integer.parseInt(args[3]);
+		
 	}
-	
+
 	public void readConfigFile(int nodeNumber, File f)
 	{
 		FileReader fileReader;
@@ -61,82 +81,54 @@ public class Main {
 			fileReader = new FileReader(f);
 			BufferedReader br = new BufferedReader(fileReader);
 			ArrayList<Node> aln = new ArrayList<Node>();
-			
+			HashMap<Integer,Node> hostNameHM = new HashMap<Integer, Node>();
+
 			String line1 = br.readLine();
-			String[] words = line1.split("\t",-1);
-			for(int i=0;i<words.length;i++)
-			{
-				words[i] = words[i].trim();
-			}
-			totalNodes = Integer.parseInt(words[0]);
+			String[] words = line1.split("\\s+");
+			totalNode = Integer.parseInt(words[0]);
 			interRequestDelay = Integer.parseInt(words[1]);
 			csExecutionTime = Integer.parseInt(words[2]);
 			numberOfRequest = Integer.parseInt(words[3]);
-						
-			for(int i=0;i<totalNodes;i++)
+
+			for(int i=0;i<totalNode;i++)
 			{
 				String line2= br.readLine();
-				
-				String[] hostNameLine = line2.split("\t",-1);
-				for(int j=0;j<hostNameLine.length;j++)
-				{
-				
-					hostNameLine[j]=hostNameLine[j].trim();
-				}
-				
-				
+
+				String[] hostNameLine = line2.split("\\s+");
 				Node n = new Node();
 				n.setId(Integer.parseInt(hostNameLine[0]));
 				n.setHostname(hostNameLine[1]);
+
 				n.setPortNumber(Integer.parseInt(hostNameLine[2]));
-				
-				
-				
-				aln.add(n);
+				hostNameHM.put(n.getId(), n);
+				//aln.add(n);
 			}
-			
-			
+
 			HashMap<Integer,ArrayList<Node>> hm = new HashMap<Integer,ArrayList<Node>>();
-	
-			for(int i=0;i<totalNodes;i++)
+
+			for(int i=0;i<totalNode;i++)
 			{
 				ArrayList<Node> quorum = new ArrayList<Node>();
 				String line2= br.readLine();
-				
-				String[] childLine = line2.split("\t",-1);
+
+				String[] childLine = line2.split("\\s+");
 				for(int j=0;j<childLine.length;j++)
 				{
-					childLine[j]=childLine[j].trim();
-					if(childLine[j].equalsIgnoreCase(""))
-						childLine[j] = "a";
-					else
-						childLine[j] = childLine[j];
+					Node n = new Node();
+					n.setId(Integer.parseInt(childLine[j]));
+					n.setHostname(hostNameHM.get(n.getId()).getHostname());
+					n.setPortNumber(hostNameHM.get(n.getId()).getPortNumber());
+					quorum.add(n);
+
 				}
-				for(int j=0;j<childLine.length;j++)
-				{
-					if(!childLine[j].equalsIgnoreCase("a"))
-					{				
-						Node n = new Node();
-						n.setId(Integer.parseInt(childLine[j]));
-						
-						n.setHostname(aln.get(n.getId()).getHostname());
-						n.setPortNumber(aln.get(n.getId()).getPortNumber());
-						
-						quorum.add(n);
-					}
-				}
-				
+
 				hm.put(i, quorum);
 			}
-			
-			node.setHostname(aln.get(nodeNumber).getHostname());
-			node.setPortNumber(aln.get(nodeNumber).getPortNumber());
+
+			node.setHostname(hostNameHM.get(nodeNumber).getHostname());
+			node.setPortNumber(hostNameHM.get(nodeNumber).getPortNumber());
 			node.setQuorum(hm.get(nodeNumber));
 
-			
-			
-			
-			
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -144,7 +136,7 @@ public class Main {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	public Node getNode() {
@@ -154,22 +146,95 @@ public class Main {
 	public void setNode(Node node) {
 		this.node = node;
 	}
-	
+
 	public void csEnter()
 	{
-		
+		ArrayList<Message> alm = new ArrayList<Message>();
+		for(Node n : node.getQuorum())
+		{
+			Message m = new Message();
+			m.setSourceNode(node);
+			m.setDestinationNode(n);
+			m.setMessage("request");
+			alm.add(m);
+		}
+		SocketConnectionClient scc = new SocketConnectionClient(alm);
+		scc.start();
+		while(!Main.csEnter)
+		{
+		}
+		System.out.println("Exit CS Enter function");
+
 	}
-	
+
 	public void csExecution()
 	{
+		//sending execution request to the resource csgrads1
+		ArrayList<Message> almResource = new ArrayList<Message>();
+		Message mResource = new Message();
+		mResource.setSourceNode(node);
+		//we will get the destination hostname fro command line argument
+		Node nResource = new Node();
+		nResource.setHostname(resourceHostName);
+		nResource.setPortNumber(resourcePortNumber);
 		
+		mResource.setDestinationNode(nResource);
+		mResource.setMessage("csenter");
+		almResource.add(mResource);
+		
+		SocketConnectionClient sccResource = new SocketConnectionClient(almResource);
+		sccResource.start();
+		
+        double lambda = 1.0 / csExecutionTime; 
+        Random defaultR = new Random();
+        try {        	
+        	long l = (long) getRandom(defaultR, lambda);
+			Thread.sleep(l);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.out.println("CSExecution "+ node.getId());
+		Main.csEnter = false;
+
 	}
-	
+
 	public void csExit()
 	{
+		//sending execution request to the resource csgrads1
+				ArrayList<Message> almResource = new ArrayList<Message>();
+				Message mResource = new Message();
+				mResource.setSourceNode(node);
+				//we will get the destination hostname fro command line argument
+				Node nResource = new Node();
+				nResource.setHostname(resourceHostName);
+				nResource.setPortNumber(resourcePortNumber);
+				
+				mResource.setDestinationNode(nResource);
+				mResource.setMessage("csexit");
+				almResource.add(mResource);
+				
+				SocketConnectionClient sccResource = new SocketConnectionClient(almResource);
+				sccResource.start();
+				
+		ArrayList<Message> alm = new ArrayList<Message>();
+		for(Node n : node.getQuorum())
+		{
+			Message m = new Message();
+			m.setSourceNode(node);
+			m.setDestinationNode(n);
+			m.setMessage("release");
+			alm.add(m);
+		}
+		SocketConnectionClient scc = new SocketConnectionClient(alm);
+		scc.start();
+		
 		
 	}
-	
-	
+
+	public double getRandom(Random r, double p) { 
+		double d = -(Math.log(r.nextDouble()) / p);
+		return d;
+	}
+
 
 }
