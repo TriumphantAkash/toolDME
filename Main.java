@@ -18,10 +18,12 @@ public class Main {
 	public static String resourceHostName;
 	public static int resourcePortNumber;
 	public static volatile boolean csEnter = false;
+	Node resource;
 
 	public Main()
 	{
 		node = new Node();
+		resource = new Node();
 	}
 
 	public static void main(String[] args) {
@@ -31,6 +33,8 @@ public class Main {
 		Main m = new Main();
 		m.node.setId(nodeNumber);
 		m.readConfigFile(nodeNumber,f);
+		m.resource.setHostname(args[0]);
+		m.resource.setPortNumber(Integer.parseInt(args[3]));
 
 		SocketConnectionServer server = new SocketConnectionServer(m.node);
 		server.start();
@@ -69,8 +73,6 @@ public class Main {
 				e.printStackTrace();
 			}	
 		}
-		resourceHostName=args[2];
-		resourcePortNumber=Integer.parseInt(args[3]);
 		
 	}
 
@@ -174,11 +176,7 @@ public class Main {
 		Message mResource = new Message();
 		mResource.setSourceNode(node);
 		//we will get the destination hostname fro command line argument
-		Node nResource = new Node();
-		nResource.setHostname(resourceHostName);
-		nResource.setPortNumber(resourcePortNumber);
-		
-		mResource.setDestinationNode(nResource);
+		mResource.setDestinationNode(resource);
 		mResource.setMessage("csenter");
 		almResource.add(mResource);
 		
@@ -205,11 +203,7 @@ public class Main {
 				Message mResource = new Message();
 				mResource.setSourceNode(node);
 				//we will get the destination hostname fro command line argument
-				Node nResource = new Node();
-				nResource.setHostname(resourceHostName);
-				nResource.setPortNumber(resourcePortNumber);
-				
-				mResource.setDestinationNode(nResource);
+				mResource.setDestinationNode(resource);
 				mResource.setMessage("csexit");
 				almResource.add(mResource);
 				
