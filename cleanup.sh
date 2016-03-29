@@ -1,6 +1,7 @@
 #!/bin/bash
 #Author: Moses Ike. http://mosesike.org
 #This script needs 2 argument. path to config file, and netid
+resourceHostName=csgrads1
 
 CONFIG=$1
 netid=$2
@@ -11,6 +12,7 @@ cat $CONFIG | sed -e "s/#.*//" | sed -e "/^\s*$/d" |
     read i
     #echo $i
     nodes=$( echo $i | cut -f1 -d" ")
+    ssh -o StrictHostKeyChecking=no $netid@$resourceHostName "ps -u $USER | grep java | tr -s ' ' | cut -f1 -d' ' | xargs kill " &
     while read line 
     do
         host=$( echo $line | awk '{ print $2 }' )

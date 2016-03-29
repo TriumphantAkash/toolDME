@@ -2,11 +2,16 @@
 #Author: Nilesh Gupta
 #This script needs 2 argument. path to config file, and netid
 
+resourceHostName=csgrads1
+resoucePortNumber=65535
 PROG=Project2
 javac *.java
 #command line arguments
+
 CONFIG=$1
 netid=$2
+
+ssh -o StrictHostKeyChecking=no $netid@$resourceHostName "cd $(pwd); java ResourceProcess $resoucePortNumber temp" &
 
 #clear a custom debug file b4 each run/test
 echo -e "" > debug.txt
@@ -68,7 +73,7 @@ do
 #	neighbors=${neighbors_dict["$node_id"]}
 	#if [ $node_id -ne $root_node ]; then
 #		echo $netid@$host "java Main $node_id 'temp' "
-		ssh -o StrictHostKeyChecking=no $netid@$host "cd $(pwd); java Main $node_id temp" &
+		ssh -o StrictHostKeyChecking=no $netid@$host "cd $(pwd); java Main $node_id temp $resourceHostName $resoucePortNumber" &
 		
 #	else
 #		root_hostName+=$host

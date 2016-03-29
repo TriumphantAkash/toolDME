@@ -33,7 +33,7 @@ public class Main {
 		Main m = new Main();
 		m.node.setId(nodeNumber);
 		m.readConfigFile(nodeNumber,f);
-		m.resource.setHostname(args[0]);
+		m.resource.setHostname(args[2]);
 		m.resource.setPortNumber(Integer.parseInt(args[3]));
 
 		SocketConnectionServer server = new SocketConnectionServer(m.node);
