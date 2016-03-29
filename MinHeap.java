@@ -25,20 +25,24 @@ public class MinHeap {
 		int right = (2*index)+2;
 		heapSize = al.size();
 		int smallest = index;
+
 		
 
 		if(left<heapSize && al.get(left).getRequestTimestamp()<=al.get(index).getRequestTimestamp())
 		{
 			if(al.get(left).getRequestTimestamp()<al.get(index).getRequestTimestamp())
+
 				smallest = left;
 			else if(al.get(left).getId()<al.get(index).getId())
 			{
 				smallest = left;
 			}
 		}
+
 		if(right<heapSize && al.get(right).getRequestTimestamp()<=al.get(smallest).getRequestTimestamp())
 		{
 			if(al.get(right).getRequestTimestamp()<al.get(index).getRequestTimestamp())
+
 				smallest = right;
 			else if((al.get(right).getId()<al.get(index).getId()))
 				smallest = right;
