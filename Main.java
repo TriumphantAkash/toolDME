@@ -19,7 +19,9 @@ public class Main {
 	public static int resourcePortNumber;
 	public static volatile boolean csEnter = false;
 	Node resource;
-
+	public static volatile boolean ackFromResourceForCSEnter = false;
+	public static volatile boolean ackFromResourceForCSExit = false;
+	
 	public Main()
 	{
 		node = new Node();
@@ -46,9 +48,9 @@ public class Main {
 			e.printStackTrace();
 		}
 
-		//while(m.numberOfRequest>0)
-		int counter = 2;
-		while(counter>0)
+		while(m.numberOfRequest>0)
+		//int counter = 2;
+		//while(counter>0)
 		{			
 
 			try {        	
@@ -62,8 +64,8 @@ public class Main {
 			m.csExecution();
 			m.csExit();
 
-			//m.numberOfRequest = m.numberOfRequest - 1;
-			counter--;
+			m.numberOfRequest = m.numberOfRequest - 1;
+			//counter--;
 			double lambda = 1.0 / m.interRequestDelay; 
 			Random defaultR = new Random();
 			try {        	
@@ -193,6 +195,11 @@ public class Main {
 		}
 		System.out.println("CSExecution "+ node.getId());
 		Main.csEnter = false;
+		while(!ackFromResourceForCSEnter)
+		{
+			
+		}
+		ackFromResourceForCSEnter = false;
 
 	}
 
@@ -221,6 +228,11 @@ public class Main {
 		}
 		SocketConnectionClient scc = new SocketConnectionClient(alm);
 		scc.start();
+		while(!ackFromResourceForCSExit)
+		{
+			
+		}
+		ackFromResourceForCSExit = false;
 		
 		
 	}

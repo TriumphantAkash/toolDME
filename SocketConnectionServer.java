@@ -35,16 +35,21 @@ public class SocketConnectionServer extends Thread{
 				ois.close();
 
 				//set logical clock
-				if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
-					node.setTimestamp(m.getSourceNode().getTimestamp()+1);
-				}else {
-					node.setTimestamp(node.getTimestamp()+1);
-				}
+//				if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+//					node.setTimestamp(m.getSourceNode().getTimestamp()+1);
+//				}else {
+//					node.setTimestamp(node.getTimestamp()+1);
+//				}
 
 				if(m.getMessage().equalsIgnoreCase("request"))
 				{
 					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
 					System.out.println("Node "+ node.getId() + " PQ size"+ node.getQueue().size());
+					if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+						node.setTimestamp(m.getSourceNode().getTimestamp()+1);
+					}else {
+						node.setTimestamp(node.getTimestamp()+1);
+					}
 					if(!node.isGrantFlag())
 					{	//if this is first request, grant Flag is false
 						node.getQueue().add(m.getSourceNode());
@@ -127,6 +132,12 @@ public class SocketConnectionServer extends Thread{
 				else if(m.getMessage().equalsIgnoreCase("release"))
 				{
 					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
+					
+					if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+						node.setTimestamp(m.getSourceNode().getTimestamp()+1);
+					}else {
+						node.setTimestamp(node.getTimestamp()+1);
+					}
 					//1) delete first element from the main queue
 					node.getQueue().remove(0);
 					//mn.minHeapify(node.getQueue(), 0);
@@ -160,14 +171,14 @@ public class SocketConnectionServer extends Thread{
 						System.out.println();
 						
 						node.setGrantOwner(node.getQueue().get(0));
-						ArrayList<Message> alm = new ArrayList<Message>();
+						//ArrayList<Message> alm = new ArrayList<Message>();
 						Message sendGrant = new Message();
 						sendGrant.setMessage("grant");
 						sendGrant.setSourceNode(node);
 						sendGrant.setDestinationNode(node.getQueue().get(0));
 						node.setGrantFlag(true);
-						alm.add(sendGrant);
-						SocketConnectionClient scc = new SocketConnectionClient(alm);
+						//alm.add(sendGrant);
+						SocketConnectionClient scc = new SocketConnectionClient(sendGrant);
 						scc.start();
 
 					}
@@ -177,6 +188,11 @@ public class SocketConnectionServer extends Thread{
 				{
 					//1) update grant arrayList
 					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
+					if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+						node.setTimestamp(m.getSourceNode().getTimestamp()+1);
+					}else {
+						node.setTimestamp(node.getTimestamp()+1);
+					}
 					node.getGrant().add(m.getSourceNode());
 					System.out.print("Node "+ node.getId() + " Grant list ");
 					for(Node n: node.getGrant())
@@ -188,16 +204,6 @@ public class SocketConnectionServer extends Thread{
 				
 					node.setFailedList(removeElementFromList(node.getFailedList(), m.getSourceNode().getId()));
 					
-					//for(int i=0;i<node.getFailedList().size();i++)
-//					{
-//						if(node.getFailedList().get(i).getId() == m.getSourceNode().getId())
-//						{
-//							node.getFailedList().remove(i);
-//							break;
-//						}
-//					}
-
-					//System.out.println("Node "+node.getId() + " Grant List Size "+node.getGrant().size());
 
 					//2) check size of grantArrayList 
 					if(node.getGrant().size() == node.getQuorum().size())
@@ -217,20 +223,18 @@ public class SocketConnectionServer extends Thread{
 				else if(m.getMessage().equalsIgnoreCase("inquire"))
 				{
 					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
+					if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+						node.setTimestamp(m.getSourceNode().getTimestamp()+1);
+					}else {
+						node.setTimestamp(node.getTimestamp()+1);
+					}
 					if(node.getFailedList().size()>0)
 					{	
 						System.out.println("Nilesh");
-						Iterator<Node> it = node.getGrant().iterator();
+						
 						
 						node.setGrant(removeElementFromList(node.getGrant(), m.getSourceNode().getId()));
-//						for(int i=0;i<node.getGrant().size();i++)
-//						{
-//							if(node.getGrant().get(i).getId() == m.getSourceNode().getId())
-//							{
-//								node.getGrant().remove(i);
-//								break;
-//							}
-//						}
+
 						node.getInquireQuorum().add(m.getSourceNode());
 						System.out.print("Inquire List ");
 						for(Node n: node.getInquireQuorum())
@@ -270,6 +274,11 @@ public class SocketConnectionServer extends Thread{
 				else if(m.getMessage().equalsIgnoreCase("yield"))
 				{
 					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
+					if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+						node.setTimestamp(m.getSourceNode().getTimestamp()+1);
+					}else {
+						node.setTimestamp(node.getTimestamp()+1);
+					}
 					if(node.getWaitingForYield().size()>0)
 					{
 						for(Node n : node.getWaitingForYield())
@@ -295,6 +304,11 @@ public class SocketConnectionServer extends Thread{
 				else if(m.getMessage().equalsIgnoreCase("failed"))
 				{
 					System.out.println("Message "+ m.getMessage() + " Source "+ m.getSourceNode().getId() + " Destination "+m.getDestinationNode().getId());
+					if(node.getTimestamp() < m.getSourceNode().getTimestamp()){
+						node.setTimestamp(m.getSourceNode().getTimestamp()+1);
+					}else {
+						node.setTimestamp(node.getTimestamp()+1);
+					}
 					node.getFailedList().add(m.getSourceNode());
 					System.out.println("Node "+node.getId() + " inside failed : inqQuorum size "+ node.getInquireQuorum().size());
 					if(node.getInquireQuorum().size()>0)
@@ -311,14 +325,7 @@ public class SocketConnectionServer extends Thread{
 							
 							
 							node.setGrant(removeElementFromList(node.getGrant(), n.getId()));
-//							for(int i=0;i<node.getGrant().size();i++)
-//							{
-//								if(node.getGrant().get(i).getId() == n.getId())
-//								{
-//									node.getGrant().remove(i);
-//									i--;
-//								}
-//							}
+
 													
 							alm.add(send);
 							System.out.print("Node " + node.getId() + " Grant list after deletion ");
@@ -338,6 +345,14 @@ public class SocketConnectionServer extends Thread{
 						SocketConnectionClient c = new SocketConnectionClient(alm);
 						c.start();	
 					}
+				}
+				else if(m.getMessage().equalsIgnoreCase("csenter"))
+				{
+					Main.ackFromResourceForCSEnter = true;
+				}
+				else if(m.getMessage().equalsIgnoreCase("csexit"))
+				{
+					Main.ackFromResourceForCSExit = true;
 				}
 			}
 

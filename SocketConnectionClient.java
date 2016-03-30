@@ -34,15 +34,13 @@ public class SocketConnectionClient extends Thread{
 			}
 			else
 			{
-				synchronized(m)
-				{					
-					
+				
 					Socket client = new Socket(m.getDestinationNode().getHostname(), m.getDestinationNode().getPortNumber());
 					ObjectOutputStream oos = new ObjectOutputStream(client.getOutputStream());
 					oos.writeObject(m);
 					oos.close();
 					client.close();
-				}
+				
 			}
 
 		}
@@ -51,6 +49,10 @@ public class SocketConnectionClient extends Thread{
 			if(am.size()>0)
 			{
 				System.out.println("-- am size - " + am.size());
+				for(Message m1 : am)
+				{
+					System.out.println(m1.getMessage()+" - " + m1.getSourceNode().getId() + " - " + m1.getDestinationNode().getId());
+				}
 			}else{
 				System.out.println(m.getMessage()+" - " + m.getSourceNode().getId() + " - " + m.getDestinationNode().getId());
 			}
